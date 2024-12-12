@@ -47,10 +47,12 @@
                     console.error(err);
                     return;
                 }
+                console.log("Quagga initialized successfully");
                 Quagga.start();
             });
 
             Quagga.onDetected((data) => {
+                console.log("Barcode detected:", data);
                 const code = data.codeResult.code;
                 const product = productList[code] || "Unknown Product";
                 if (!scannedItems.includes(product)) {
