@@ -3,11 +3,20 @@
 <head>
     <title>Barcode Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1"></script>
+    <style>
+        #camera {
+            width: 300px;
+            height: 200px;
+            border: 1px solid black;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Barcode Scanner</h1>
     <video id="camera" autoplay></video>
     <button id="scan">Start Scanning</button>
+    <button id="stop" style="display: none;">Stop Scanning</button>
     <ul id="scanned-products"></ul>
 
     <script>
@@ -21,6 +30,10 @@
         const scannedItems = [];
 
         document.getElementById('scan').addEventListener('click', () => {
+            document.getElementById('camera').style.display = 'block';
+            document.getElementById('scan').style.display = 'none';
+            document.getElementById('stop').style.display = 'inline';
+
             Quagga.init({
                 inputStream: {
                     type: "LiveStream",
@@ -47,6 +60,13 @@
                     document.getElementById('scanned-products').appendChild(listItem);
                 }
             });
+        });
+
+        document.getElementById('stop').addEventListener('click', () => {
+            Quagga.stop();
+            document.getElementById('camera').style.display = 'none';
+            document.getElementById('scan').style.display = 'inline';
+            document.getElementById('stop').style.display = 'none';
         });
     </script>
 </body>
