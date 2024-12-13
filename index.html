@@ -1,223 +1,121 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
     <title>Barcode Scanner</title>
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
     <style>
-        #camera-container {
-            width: 300px;
-            height: 200px;
-            border: 1px solid black;
+        html {
+            font-size: 16px;
+            /* Base font size for better scaling */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #barcode-scanner {
+            width: 100%;
+            height: 70vh;
+            /* Increased camera preview size */
+            border: 1px solid gray;
+        }
+
+        #buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        button {
+            font-size: 1.2rem;
+            /* Larger button font size */
+            padding: 10px 20px;
+            /* Larger button padding */
+            margin: 5px 0;
+        }
+
+        #barcode-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 1.1rem;
+            /* Larger list font size */
         }
     </style>
 </head>
 
 <body>
-    <h1>Barcode Scanner</h1>
-    <div id="camera-container"></div>
-    <button id="scan">Start Scanning</button>
-    <button id="stop" style="display: none;">Stop Scanning</button>
-    <ul id="scanned-products"></ul>
 
-    <div id="barcode-scanner" class="size"> </div>
+    <div id="barcode-scanner"></div>
 
+    <div id="buttons">
+        <button id="start-button">Start Camera</button>
+        <button id="stop-button" disabled>Stop Camera</button>
+    </div>
+
+    <ul id="barcode-list"></ul>
 
     <script>
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: document.querySelector('#barcode-scanner'),
-                constraints: {
-                    width: 520,
-                    height: 400,
-                    facingMode: "user"  //"environment" for back camera, "user" front camera
-                }
-            },
-            decoder: {
-                readers: ["code_128_reader", "code_39_reader"]
-            }
+        const scanner = document.getElementById('barcode-scanner');
+        const startButton = document.getElementById('start-button');
+        const stopButton = document.getElementById('stop-button');
+        const barcodeList = document.getElementById('barcode-list');
+        let barcodes = [];
 
-        }, function (err) {
-            if (err) {
-                esto.error = err;
-                console.log(err);
-                return
-            }
-
-            Quagga.start();
-
-            Quagga.onDetected(function (result) {
-                var last_code = result.codeResult.code;
-                console.log("last_code ");
-            });
-        });
-
-
-
-
-        const productList = {
-            "123456789012": "Product A",
-            "987654321098": "Product B",
+        const productCodes = {
+            "12345": "Product A",
+            "67890": "Product B",
+            "54321": "Product C",
             "072036310200": "HT Table Salt",
             "058496723040": "Cat Treats",
             "692042014710": "EGO Chainsaw Lubricant"
+            // Add more codes and names as needed
         };
-        const scannedItems = [];
 
-        const cameraContainer = document.getElementById('camera-container');
-        const scanButton = document.getElementById('scan');
-        const stopButton = document.getElementById('stop');
-
-        scanButton.addEventListener('click', () => {
-            scanButton.style.display = 'none';
-            stopButton.style.display = 'inline';
-
+        startButton.addEventListener('click', () => {
             Quagga.init({
                 inputStream: {
+                    name: "Live",
                     type: "LiveStream",
-                    constraints: {
-                        facingMode: "environment", // Use the back camera if available
-                        width: 300,
-                        height: 200
-                    },
-                    target: cameraContainer
+                    target: scanner,
                 },
                 decoder: {
-                    readers: ["ean_reader"] // Adjust to your barcode type
-                }
+                    readers: ["ean_reader"], // You can add more reader types here
+                },
             }, (err) => {
                 if (err) {
-                    console.error("Quagga initialization failed:", err);
-                    scanButton.style.display = 'inline';
-                    stopButton.style.display = 'none';
+                    console.error(err);
                     return;
                 }
-                console.log("Quagga initialized successfully");
+                console.log("Initialization finished. Ready to start");
                 Quagga.start();
+                startButton.disabled = true;
+                stopButton.disabled = false;
             });
 
-
-
-            Quagga.onDetected((data) => {
-                const code = data.codeResult.code;
-                const product = productList[code] || "Unknown Product";
-
-                // Add scanned code and corresponding product to the list
-                if (!scannedItems.includes(code)) {
-                    scannedItems.push(code);
-                    const listItem = document.createElement("li");
-                    listItem.textContent = `${code} - ${product}`;
-                    document.getElementById('scanned-products').appendChild(listItem);
+            Quagga.onDetected((result) => {
+                const code = result.codeResult.code;
+                if (!barcodes.includes(code)) {
+                    barcodes.push(code);
+                    const li = document.createElement('li');
+                    const productName = productCodes[code] || "Unknown Product"; // Get product name from dictionary
+                    li.textContent = `${code} - ${productName}`; // Display both code and name
+                    barcodeList.appendChild(li);
                 }
-            });
-
-            Quagga.onDetected(function (result) {
-                console.log("Barcode detected and processed : [" + result.codeResult.code + "]", result);
             });
         });
 
         stopButton.addEventListener('click', () => {
             Quagga.stop();
-            scanButton.style.display = 'inline';
-            stopButton.style.display = 'none';
+            startButton.disabled = false;
+            stopButton.disabled = true;
         });
-
-
     </script>
-</body>
-
-</html> -->
-
-<!DOCTYPE html>
-<html>
-<head>
-<title>Barcode Scanner</title>
-<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
-<style>
-  body {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Use full viewport height */
-    margin: 0; /* Remove default body margins */
-  }
-
-  #barcode-scanner {
-    width: 100%;
-    height: 60vh; /* Camera preview takes up most of the screen */
-    border: 1px solid gray;
-  }
-
-  #buttons {
-    display: flex;
-    flex-direction: column; /* Stack buttons vertically */
-    align-items: center; /* Center buttons horizontally */
-    margin: 10px 0; /* Add some space around buttons */
-  }
-
-  #barcode-list {
-    flex-grow: 1; /* Allow the list to take up remaining space */
-    overflow-y: auto; /* Add vertical scroll if list gets too long */
-  }
-</style>
-</head>
-<body>
-
-<div id="barcode-scanner"></div>
-
-<div id="buttons">
-  <button id="start-button">Start Camera</button>
-  <button id="stop-button" disabled>Stop Camera</button>
-</div>
-
-<ul id="barcode-list"></ul>
-
-<script>
-  const scanner = document.getElementById('barcode-scanner');
-  const startButton = document.getElementById('start-button');
-  const stopButton = document.getElementById('stop-button');
-  const barcodeList = document.getElementById('barcode-list');
-  let barcodes = [];
-
-  startButton.addEventListener('click', () => {
-    Quagga.init({
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: scanner,
-      },
-      decoder: {
-        readers: ["ean_reader"], // You can add more reader types here
-      },
-    }, (err) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      console.log("Initialization finished. Ready to start");
-      Quagga.start();
-      startButton.disabled = true;
-      stopButton.disabled = false;
-    });
-
-    Quagga.onDetected((result) => {
-      const code = result.codeResult.code;
-      if (!barcodes.includes(code)) {
-        barcodes.push(code);
-        const li = document.createElement('li');
-        li.textContent = code;
-        barcodeList.appendChild(li);
-      }
-    });
-  });
-
-  stopButton.addEventListener('click', () => {
-    Quagga.stop();
-    startButton.disabled = false;
-    stopButton.disabled = true;
-  });
-</script>
 
 </body>
+
 </html>
