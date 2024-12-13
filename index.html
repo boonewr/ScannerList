@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 
 <head>
@@ -128,4 +128,96 @@
     </script>
 </body>
 
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Barcode Scanner</title>
+<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Use full viewport height */
+    margin: 0; /* Remove default body margins */
+  }
+
+  #barcode-scanner {
+    width: 100%;
+    height: 60vh; /* Camera preview takes up most of the screen */
+    border: 1px solid gray;
+  }
+
+  #buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: center; /* Center buttons horizontally */
+    margin: 10px 0; /* Add some space around buttons */
+  }
+
+  #barcode-list {
+    flex-grow: 1; /* Allow the list to take up remaining space */
+    overflow-y: auto; /* Add vertical scroll if list gets too long */
+  }
+</style>
+</head>
+<body>
+
+<div id="barcode-scanner"></div>
+
+<div id="buttons">
+  <button id="start-button">Start Camera</button>
+  <button id="stop-button" disabled>Stop Camera</button>
+</div>
+
+<ul id="barcode-list"></ul>
+
+<script>
+  const scanner = document.getElementById('barcode-scanner');
+  const startButton = document.getElementById('start-button');
+  const stopButton = document.getElementById('stop-button');
+  const barcodeList = document.getElementById('barcode-list');
+  let barcodes = [];
+
+  startButton.addEventListener('click', () => {
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: scanner,
+      },
+      decoder: {
+        readers: ["ean_reader"], // You can add more reader types here
+      },
+    }, (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log("Initialization finished. Ready to start");
+      Quagga.start();
+      startButton.disabled = true;
+      stopButton.disabled = false;
+    });
+
+    Quagga.onDetected((result) => {
+      const code = result.codeResult.code;
+      if (!barcodes.includes(code)) {
+        barcodes.push(code);
+        const li = document.createElement('li');
+        li.textContent = code;
+        barcodeList.appendChild(li);
+      }
+    });
+  });
+
+  stopButton.addEventListener('click', () => {
+    Quagga.stop();
+    startButton.disabled = false;
+    stopButton.disabled = true;
+  });
+</script>
+
+</body>
 </html>
