@@ -1,25 +1,62 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Barcode Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1"></script>
     <style>
-        #camera {
+        #camera-container {
             width: 300px;
             height: 200px;
             border: 1px solid black;
-            display: block;
         }
     </style>
 </head>
+
 <body>
     <h1>Barcode Scanner</h1>
-    <div id="camera-container" style="width: 300px; height: 200px;"></div>
+    <div id="camera-container"></div>
     <button id="scan">Start Scanning</button>
     <button id="stop" style="display: none;">Stop Scanning</button>
     <ul id="scanned-products"></ul>
 
+    <div id="barcode-scanner" class="size"> </div>
+
+
     <script>
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: document.querySelector('#barcode-scanner'),
+                constraints: {
+                    width: 520,
+                    height: 400,
+                    facingMode: "user"  //"environment" for back camera, "user" front camera
+                }
+            },
+            decoder: {
+                readers: ["code_128_reader", "code_39_reader"]
+            }
+
+        }, function (err) {
+            if (err) {
+                esto.error = err;
+                console.log(err);
+                return
+            }
+
+            Quagga.start();
+
+            Quagga.onDetected(function (result) {
+                var last_code = result.codeResult.code;
+                console.log("last_code ");
+            });
+        });
+
+
+
+
         const productList = {
             "123456789012": "Product A",
             "987654321098": "Product B",
@@ -61,15 +98,23 @@
                 Quagga.start();
             });
 
+
+
             Quagga.onDetected((data) => {
                 const code = data.codeResult.code;
                 const product = productList[code] || "Unknown Product";
-                if (!scannedItems.includes(product)) {
-                    scannedItems.push(product);
+
+                // Add scanned code and corresponding product to the list
+                if (!scannedItems.includes(code)) {
+                    scannedItems.push(code);
                     const listItem = document.createElement("li");
-                    listItem.textContent = product;
+                    listItem.textContent = `${code} - ${product}`;
                     document.getElementById('scanned-products').appendChild(listItem);
                 }
+            });
+
+            Quagga.onDetected(function (result) {
+                console.log("Barcode detected and processed : [" + result.codeResult.code + "]", result);
             });
         });
 
@@ -78,6 +123,9 @@
             scanButton.style.display = 'inline';
             stopButton.style.display = 'none';
         });
+
+
     </script>
 </body>
+
 </html>
