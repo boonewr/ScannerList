@@ -99,11 +99,21 @@
 
             Quagga.onDetected((result) => {
                 const code = result.codeResult.code;
+                const codeWithoutLeadingZeroes = code.replace(/^0+/, ''); // Remove leading zeroes
+                let productName = "Unknown Product";
+
+                // Find product name in dictionary (case-insensitive)
+                for (const key in productCodes) {
+                    if (key.replace(/^0+/, '') === codeWithoutLeadingZeroes) {
+                        productName = productCodes[key];
+                        break;
+                    }
+                }
+
                 if (!barcodes.includes(code)) {
                     barcodes.push(code);
                     const li = document.createElement('li');
-                    const productName = productCodes[code] || "Unknown Product"; // Get product name from dictionary
-                    li.textContent = `${code} - ${productName}`; // Display both code and name
+                    li.textContent = `${code} - ${productName}`;
                     barcodeList.appendChild(li);
                 }
             });
