@@ -101,34 +101,19 @@
         const lingerTime = 2000; // Time (in ms) to linger the last detected barcode
         const barcodeDetector = 'BarcodeDetector' in window ? new BarcodeDetector() : null;
 
-        // const barcodeDictionary = {
-        //     "123456": "Product A",
-        //     "789012": "Product B",
-        //     "345678": "Product C",
-        //     "072036310200": "HT Table Salt",
-        //     "72036310200": "HT Table Salt",
-        //     "058496723040": "Cat Treats",
-        //     "692042014710": "EGO Chainsaw Lubricant",
-        //     "0888853590615": "Run Insoles",
-        //     "888853590615": "Run Insoles",
-        //     "0760172014419": "Injinji Socks",
-        //     "760172014419": "Injinji Socks",
-        // };
-
-        // Function to load the JSON file
-        async function loadProductData() {
-            try {
-                // const response = await fetch('products.json');
-                const response = await fetch(`data/products.json?${new Date().getTime()}`);
-                const barcodeDictionary = await response.json();
-                console.log("Product data loaded:", barcodeDictionary);
-                // barcodeDictionary = await response.json();
-                console.log("Product data loaded:", barcodeDictionary);
-            } catch (err) {
-                console.error("Error loading product data:", err);
-                output.textContent = "Error loading product data.";
-            }
-        }
+        const barcodeDictionary = {
+            "123456": "Product A",
+            "789012": "Product B",
+            "345678": "Product C",
+            "072036310200": "HT Table Salt",
+            "72036310200": "HT Table Salt",
+            "058496723040": "Cat Treats",
+            "692042014710": "EGO Chainsaw Lubricant",
+            "0888853590615": "Run Insoles",
+            "888853590615": "Run Insoles",
+            "0760172014419": "Injinji Socks",
+            "760172014419": "Injinji Socks",
+        };
 
         const scannedItems = []; // Stores scanned items with quantity
         const video = document.getElementById('video');
@@ -167,15 +152,6 @@
                         const barcodes = await barcodeDetector.detect(canvas);
 
                         if (barcodes.length > 0) {
-                            // const barcodeValue = barcodes[0].rawValue;
-                            // let productName = barcodeDictionary[barcodeValue]; // Try matching exactly
-
-                            // if (!productName) {
-                            //     // Try matching by prepending a leading zero
-                            //     const barcodeWithLeadingZero = '0' + barcodeValue;
-                            //     productName = barcodeDictionary[barcodeWithLeadingZero] || "Unknown Product";
-                            // }
-
                             const barcodeValue = normalizeBarcode(barcodes[0].rawValue);
                             const productName = barcodeDictionary[barcodeValue] || "Unknown Product";
 
@@ -193,7 +169,7 @@
                             // No barcode detected and linger time expired
                             currentBarcode = null;
                             currentProductName = null;
-                            output.textContent = "No barcode detected....";
+                            output.textContent = "No barcode detected.";
                             scanBtn.disabled = true; // Disable Scan button
                         }
                     } catch (err) {
@@ -249,9 +225,6 @@
                 barcodeList.appendChild(li);
             });
         }
-
-        // Load product data on page load
-        loadProductData();
 
         startBtn.addEventListener('click', startScanner);
         stopBtn.addEventListener('click', stopScanner);
