@@ -90,6 +90,10 @@
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
 
+        function normalizeBarcode(code) {
+            return code.replace(/^0+/, '');
+        }
+
         async function startScanner() {
             if (!barcodeDetector) {
                 output.textContent = "Barcode Detector is not supported in this browser.";
@@ -113,7 +117,8 @@
                     try {
                         const barcodes = await barcodeDetector.detect(canvas);
                         if (barcodes.length > 0) {
-                            const barcodeValue = barcodes[0].rawValue;
+                            // const barcodeValue = barcodes[0].rawValue;
+                            const barcodeValue = normalizeBarcode(barcodes[0].rawValue);
                             const productName = barcodeDictionary[barcodeValue] || "Unknown Product";
 
                             if (!scannedBarcodes.some(item => item.code === barcodeValue)) {
