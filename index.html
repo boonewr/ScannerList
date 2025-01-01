@@ -104,16 +104,22 @@
         const barcodeDictionary = {
             "123456": "Product A",
             "789012": "Product B",
-            "345678": "Product C",
-            "072036310200": "HT Table Salt",
-            "72036310200": "HT Table Salt",
-            "058496723040": "Cat Treats",
-            "692042014710": "EGO Chainsaw Lubricant",
-            "0888853590615": "Run Insoles",
-            "888853590615": "Run Insoles",
-            "0760172014419": "Injinji Socks",
-            "760172014419": "Injinji Socks",
+            "345678": "Product C"
         };
+
+        async function loadProductData() {
+            try {
+                // const response = await fetch('products.json');
+                const response = await fetch(`data/products.json?${new Date().getTime()}`);
+                const barcodeDictionary = await response.json();
+                console.log("Product data loaded:", barcodeDictionary);
+                // barcodeDictionary = await response.json();
+                console.log("Product data loaded:", barcodeDictionary);
+            } catch (err) {
+                console.error("Error loading product data:", err);
+                output.textContent = "Error loading product data.";
+            }
+        }
 
         const scannedItems = []; // Stores scanned items with quantity
         const video = document.getElementById('video');
@@ -225,6 +231,8 @@
                 barcodeList.appendChild(li);
             });
         }
+
+        loadProductData();
 
         startBtn.addEventListener('click', startScanner);
         stopBtn.addEventListener('click', stopScanner);
