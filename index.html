@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Barcode Scanner</title>
+    <title>Enhanced Barcode Scanner with Quantity</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,6 +17,7 @@
             height: 100vh;
             background-color: #f7f7f7;
         }
+
         video {
             width: 90%;
             max-width: 600px;
@@ -23,9 +25,11 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         #controls {
             margin-top: 20px;
         }
+
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -36,41 +40,50 @@
             background-color: #007BFF;
             color: white;
         }
+
         button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        #output, #scanned-list {
+
+        #output,
+        #scanned-list {
             margin-top: 20px;
             font-size: 18px;
             color: #333;
             text-align: center;
         }
+
         ul {
             list-style: none;
             padding: 0;
         }
+
         li {
             margin: 5px 0;
         }
     </style>
 </head>
+
 <body>
-    <h1>Enhanced Barcode Scanner</h1>
+    <h1>Enhanced Barcode Scanner with Quantity</h1>
     <video id="video" autoplay playsinline hidden></video>
     <div id="controls">
         <button id="startBtn">Start Scanner</button>
         <button id="stopBtn" disabled>Stop Scanner</button>
+        <button id="scanBtn" disabled>Scan Item</button>
     </div>
     <div id="output">No barcode detected yet.</div>
     <div id="scanned-list">
-        <h3>Scanned Barcodes:</h3>
+        <h3>Scanned Items:</h3>
         <ul id="barcodeList"></ul>
     </div>
 
     <script>
         let videoStream = null;
         let scanInterval = null;
+        let currentBarcode = null; // The barcode currently detected
+        let currentProductName = null; // The product name currently detected
         const barcodeDetector = 'BarcodeDetector' in window ? new BarcodeDetector() : null;
 
         const barcodeDictionary = {
@@ -85,13 +98,15 @@
             "888853590615": "Run Insoles"
         };
 
-        const scannedBarcodes = [];
+        const scannedItems = []; // Stores scanned items with quantity
         const video = document.getElementById('video');
         const output = document.getElementById('output');
         const barcodeList = document.getElementById('barcodeList');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const scanBtn = document.getElementById('scanBtn');
 
+        // Function to normalize barcode values (removes leading zeros)
         function normalizeBarcode(code) {
             return code.replace(/^0+/, '');
         }
@@ -119,18 +134,19 @@
                     try {
                         const barcodes = await barcodeDetector.detect(canvas);
                         if (barcodes.length > 0) {
-                            // const barcodeValue = barcodes[0].rawValue;
                             const barcodeValue = normalizeBarcode(barcodes[0].rawValue);
                             const productName = barcodeDictionary[barcodeValue] || "Unknown Product";
 
-                            if (!scannedBarcodes.some(item => item.code === barcodeValue)) {
-                                scannedBarcodes.push({ code: barcodeValue, name: productName });
-                                updateScannedList();
-                            }
+                            currentBarcode = barcodeValue;
+                            currentProductName = productName;
 
                             output.textContent = `Detected: ${barcodeValue} (${productName})`;
+                            scanBtn.disabled = false; // Enable Scan button
                         } else {
                             output.textContent = "No barcode detected.";
+                            currentBarcode = null;
+                            currentProductName = null;
+                            scanBtn.disabled = true; // Disable Scan button
                         }
                     } catch (err) {
                         console.error("Error detecting barcodes:", err);
@@ -160,20 +176,36 @@
             video.hidden = true;
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            scanBtn.disabled = true; // Disable Scan button
             output.textContent = "Scanner stopped.";
+        }
+
+        function scanItem() {
+            if (!currentBarcode || !currentProductName) return;
+
+            const existingItem = scannedItems.find(item => item.code === currentBarcode);
+            if (existingItem) {
+                existingItem.quantity += 1; // Increment quantity if item exists
+            } else {
+                scannedItems.push({ code: currentBarcode, name: currentProductName, quantity: 1 });
+            }
+
+            updateScannedList();
         }
 
         function updateScannedList() {
             barcodeList.innerHTML = "";
-            scannedBarcodes.forEach(({ code, name }) => {
+            scannedItems.forEach(({ code, name, quantity }) => {
                 const li = document.createElement('li');
-                li.textContent = `${code}: ${name}`;
+                li.textContent = `${name} [${quantity}] (${code})`;
                 barcodeList.appendChild(li);
             });
         }
 
         startBtn.addEventListener('click', startScanner);
         stopBtn.addEventListener('click', stopScanner);
+        scanBtn.addEventListener('click', scanItem);
     </script>
 </body>
+
 </html>
