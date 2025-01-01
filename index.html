@@ -1,131 +1,172 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Barcode Scanner</title>
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Barcode Scanner</title>
     <style>
-        html {
-            font-size: 16px;
-            /* Base font size for better scaling */
-        }
-
         body {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+            font-family: Arial, sans-serif;
             margin: 0;
-        }
-
-        #barcode-scanner {
-            width: 100%;
-            height: 70vh;
-            /* Increased camera preview size */
-            border: 1px solid gray;
-        }
-
-        #buttons {
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 10px 0;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f7f7f7;
         }
-
+        video {
+            width: 90%;
+            max-width: 600px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #controls {
+            margin-top: 20px;
+        }
         button {
-            font-size: 1.2rem;
-            /* Larger button font size */
             padding: 10px 20px;
-            /* Larger button padding */
-            margin: 5px 0;
+            font-size: 16px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
         }
-
-        #barcode-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            font-size: 1.1rem;
-            /* Larger list font size */
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #output, #scanned-list {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
         }
     </style>
 </head>
-
 <body>
-
-    <div id="barcode-scanner"></div>
-
-    <div id="buttons">
-        <button id="start-button">Start Camera</button>
-        <button id="stop-button" disabled>Stop Camera</button>
+    <h1>Enhanced Barcode Scanner</h1>
+    <video id="video" autoplay playsinline hidden></video>
+    <div id="controls">
+        <button id="startBtn">Start Scanner</button>
+        <button id="stopBtn" disabled>Stop Scanner</button>
+    </div>
+    <div id="output">No barcode detected yet.</div>
+    <div id="scanned-list">
+        <h3>Scanned Barcodes:</h3>
+        <ul id="barcodeList"></ul>
     </div>
 
-    <ul id="barcode-list"></ul>
-
     <script>
-        const scanner = document.getElementById('barcode-scanner');
-        const startButton = document.getElementById('start-button');
-        const stopButton = document.getElementById('stop-button');
-        const barcodeList = document.getElementById('barcode-list');
-        let barcodes = [];
+        let videoStream = null;
+        let scanInterval = null;
+        const barcodeDetector = 'BarcodeDetector' in window ? new BarcodeDetector() : null;
 
-        const productCodes = {
-            "12345": "Product A",
-            "67890": "Product B",
-            "54321": "Product C",
-            072036310200: "HT Table Salt",
-            058496723040: "Cat Treats",
-            692042014710: "EGO Chainsaw Lubricant"
-            // Add more codes and names as needed
+        const barcodeDictionary = {
+            "123456": "Product A",
+            "789012": "Product B",
+            "345678": "Product C",
+            "072036310200": "HT Table Salt",
+            "058496723040": "Cat Treats",
+            "692042014710": "EGO Chainsaw Lubricant",
+            "0888853590615": "Run Insoles",
         };
 
-        startButton.addEventListener('click', () => {
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: scanner,
-                },
-                decoder: {
-                    readers: ["ean_reader"], // You can add more reader types here
-                },
-            }, (err) => {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-                console.log("Initialization finished. Ready to start");
-                Quagga.start();
-                startButton.disabled = true;
-                stopButton.disabled = false;
-            });
+        const scannedBarcodes = [];
+        const video = document.getElementById('video');
+        const output = document.getElementById('output');
+        const barcodeList = document.getElementById('barcodeList');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
 
-            Quagga.onDetected((result) => {
-                const code = result.codeResult.code;
-                const codeWithoutLeadingZeroes = code.replace(/^0+/, ''); // Remove leading zeroes
-                let productName = "Unknown Product";
+        async function startScanner() {
+            if (!barcodeDetector) {
+                output.textContent = "Barcode Detector is not supported in this browser.";
+                return;
+            }
 
-                // Find product name in dictionary (case-insensitive)
-                for (const key in productCodes) {
-                    if (key.replace(/^0+/, '') === codeWithoutLeadingZeroes) {
-                        productName = productCodes[key];
-                        break;
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = videoStream;
+                video.hidden = false;
+
+                scanInterval = setInterval(async () => {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    try {
+                        const barcodes = await barcodeDetector.detect(canvas);
+                        if (barcodes.length > 0) {
+                            const barcodeValue = barcodes[0].rawValue;
+                            const productName = barcodeDictionary[barcodeValue] || "Unknown Product";
+
+                            if (!scannedBarcodes.some(item => item.code === barcodeValue)) {
+                                scannedBarcodes.push({ code: barcodeValue, name: productName });
+                                updateScannedList();
+                            }
+
+                            output.textContent = `Detected: ${barcodeValue} (${productName})`;
+                        } else {
+                            output.textContent = "No barcode detected.";
+                        }
+                    } catch (err) {
+                        console.error("Error detecting barcodes:", err);
                     }
-                }
+                }, 500);
 
-                if (!barcodes.includes(code)) {
-                    barcodes.push(code);
-                    const li = document.createElement('li');
-                    li.textContent = `${code} - ${productName}`;
-                    barcodeList.appendChild(li);
-                }
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } catch (err) {
+                console.error("Error accessing the camera:", err);
+                output.textContent = "Error: Unable to access the camera.";
+            }
+        }
+
+        function stopScanner() {
+            if (videoStream) {
+                const tracks = videoStream.getTracks();
+                tracks.forEach(track => track.stop());
+                videoStream = null;
+            }
+
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+
+            video.hidden = true;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            output.textContent = "Scanner stopped.";
+        }
+
+        function updateScannedList() {
+            barcodeList.innerHTML = "";
+            scannedBarcodes.forEach(({ code, name }) => {
+                const li = document.createElement('li');
+                li.textContent = `${code}: ${name}`;
+                barcodeList.appendChild(li);
             });
-        });
+        }
 
-        stopButton.addEventListener('click', () => {
-            Quagga.stop();
-            startButton.disabled = false;
-            stopButton.disabled = true;
-        });
+        startBtn.addEventListener('click', startScanner);
+        stopBtn.addEventListener('click', stopScanner);
     </script>
-
 </body>
-
 </html>
