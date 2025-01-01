@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Barcode Scanner with Quantity</title>
+    <title>Barcode Scanner</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -79,7 +79,7 @@
 </head>
 
 <body>
-    <h1>Enhanced Barcode Scanner</h1>
+    <h1>Barcode Scanner</h1>
     <video id="video" autoplay playsinline hidden></video>
     <div id="controls">
         <button id="startBtn">Start</button>
@@ -98,7 +98,7 @@
         let currentBarcode = null; // The barcode currently detected
         let currentProductName = null; // The product name currently detected
         let lastDetectedTime = 0; // Timestamp for when the last barcode was detected
-        const lingerTime = 1000; // Time (in ms) to linger the last detected barcode
+        const lingerTime = 2000; // Time (in ms) to linger the last detected barcode
         const barcodeDetector = 'BarcodeDetector' in window ? new BarcodeDetector() : null;
 
         const barcodeDictionary = {
