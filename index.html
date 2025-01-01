@@ -167,12 +167,14 @@
                         const barcodes = await barcodeDetector.detect(canvas);
 
                         if (barcodes.length > 0) {
-                            const barcodeValue = normalizeBarcode(barcodes[0].rawValue);
-                            // const productName = barcodeDictionary[barcodeValue] || "Unknown Product";
+                            const barcodeValue = barcodes[0].rawValue;
+                            let productName = barcodeDictionary[barcodeValue]; // Try matching exactly
 
-                            let productName = barcodeDictionary[barcodeValue];
-                            const barcodeWithLeadingZero = '0' + barcodeValue;
-                            productName = barcodeDictionary[barcodeWithLeadingZero] || "Unknown Product";   
+                            if (!productName) {
+                                // Try matching by prepending a leading zero
+                                const barcodeWithLeadingZero = '0' + barcodeValue;
+                                productName = barcodeDictionary[barcodeWithLeadingZero] || "Unknown Product";
+                            }
 
                             if (barcodeValue !== currentBarcode) {
                                 currentBarcode = barcodeValue;
