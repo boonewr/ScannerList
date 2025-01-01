@@ -18,6 +18,12 @@
             background-color: #f7f7f7;
         }
 
+        h1 {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+        }
+
         video {
             width: 90%;
             max-width: 600px;
@@ -28,17 +34,22 @@
 
         #controls {
             margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
         }
 
         button {
             padding: 10px 20px;
             font-size: 16px;
-            margin: 0 10px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             background-color: #007BFF;
             color: white;
+            flex: 1 1 auto;
+            max-width: 120px;
         }
 
         button:disabled {
@@ -52,11 +63,13 @@
             font-size: 18px;
             color: #333;
             text-align: center;
+            width: 90%;
         }
 
         ul {
             list-style: none;
             padding: 0;
+            text-align: left;
         }
 
         li {
@@ -66,12 +79,12 @@
 </head>
 
 <body>
-    <h1>Enhanced Barcode Scanner with Quantity</h1>
+    <h1>Barcode Scanner</h1>
     <video id="video" autoplay playsinline hidden></video>
     <div id="controls">
-        <button id="startBtn">Start Scanner</button>
-        <button id="stopBtn" disabled>Stop Scanner</button>
-        <button id="scanBtn" disabled>Scan Item</button>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <button id="scanBtn" disabled>Scan</button>
     </div>
     <div id="output">No barcode detected yet.</div>
     <div id="scanned-list">
@@ -95,7 +108,9 @@
             "058496723040": "Cat Treats",
             "692042014710": "EGO Chainsaw Lubricant",
             "0888853590615": "Run Insoles",
-            "888853590615": "Run Insoles"
+            "888853590615": "Run Insoles",
+            "0760172014419": "Injinji Socks",
+            "760172014419": "Injinji Socks",
         };
 
         const scannedItems = []; // Stores scanned items with quantity
